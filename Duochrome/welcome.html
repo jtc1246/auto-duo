@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Setup</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        text-align: center;
+        opacity: 0;
+        transition: 0.5s ease-in-out;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      h3, #tutorial {
+        font-weight: normal;
+        font-size: 17px;
+        transition: 1s ease-in-out;
+      }
+      #splash {
+        font-weight: lighter;
+        font-size: 30px;
+      }
+      #tutorial {
+        margin: 10px;
+        border-radius: 15px;
+        border: 2px solid black;
+        padding: 0;
+      }
+      #logo {
+        padding-top: 50px;
+        transition: 0.65s ease-in-out;
+        display: block;
+        margin: auto;
+      }
+      #tutorialDiv, #postTutorial {
+        transition: 1s ease-in-out;
+        margin-left: 30%;
+        margin-right: 30%;
+        border-radius: 20px;
+        opacity: 0;
+      }
+      a {
+        color: inherit;
+        &:hover {
+          color: gray;
+        }
+      }
+      h4 {
+        font-weight: normal;
+        font-size: 13px;
+      }
+      /* Dark theme */
+      @media (prefers-color-scheme: dark) {
+        html, body {
+          color: white;
+          background-color: #333;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- DuOSU logo -->
+    <img id="logo" src="images/Duochrome.svg" class="expand" width="200">
+    <h1 id="splash">Welcome to <b>Duochrome</b>.</h1>
+
+    <div id="tutorialDiv">
+      <source src="images/tutorial.mov" type="video/mp4" />
+      <video id="tutorial" autoplay loop muted width="100">
+        <source src="images/tutorial.mov" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+      <h3>Navigate to your organization's Duo Mobile device manager page, then open Duochrome for activation instructions.</h3>
+      <p style="margin-bottom: 50px">Visit the <a href="https://github.com/FreshSupaSulley/Duochrome/blob/main/TUTORIAL.md">website</a> for more detailed steps.</p>
+    </div>
+  </body>
+  <script src="welcome.js"></script>
+</html>
