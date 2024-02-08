@@ -3,13 +3,10 @@ import json
 from _thread import start_new_thread
 from threading import Lock
 from time import sleep
-if __name__ == '__main__':
-    from main import activate, agree_forever
-else:
-    from .main import activate, agree_forever
+from .main import activate, agree_forever
+from .data import html_file as html
 
-with open('./duo.html', 'rb') as f:
-    html = f.read()
+html = html.encode('utf-8')
 
 
 class DuoServer:

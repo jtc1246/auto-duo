@@ -1,7 +1,4 @@
-if __name__ == "__main__":
-    from data import js_file, js_test
-else:
-    from .data import js_file, js_test
+from .data import js_file, js_test
 import subprocess
 from subprocess import DEVNULL, PIPE
 import os
