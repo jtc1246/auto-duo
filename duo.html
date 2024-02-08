@@ -149,14 +149,16 @@
             let send_request = new Promise((resolve, reject) => {
                 request.onload = async function () {
                     var status = request.status;
+                    console.log(status);
                     if(status === 200) {
                         result_text = "Success";
                         blocked = false;
                         resolve("Success");
+                        return;
                     }
                     try {
                         var resp = JSON.parse(request.responseText);
-                        result_text = "Error: " + resp["data"] + "!";
+                        result_text = "Error: " + resp["error"] + "!";
                     } catch (e) {
                         result_text = "Error: Server error!";
                     }
@@ -187,7 +189,7 @@
     <div class="in">
         <p class="in">QR code: </p>
         <input type="text" id="qr" name="qr">
-        <button id="submit" id="submit" onclick="clicked()">Submit</button>
+        <button id="submit" onclick="clicked()">Submit</button>
     </div>
     <p id="result">result here</p>
     </div>
