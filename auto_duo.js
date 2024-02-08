@@ -3,6 +3,18 @@ const XMLHttpRequest = require("@aelfqueen/xmlhttprequest").XMLHttpRequest; // n
 // can't use xmlhttprequest directly, see https://github.com/driverdan/node-XMLHttpRequest/pull/169
 // setRequestHeader does not work in that.
 
+
+const TASK = "C"; // [A]ctivate or [C]heck
+const QR_CODE = ""; // only valid when TASK is Activate
+const BASE64_DICT = ""; // only valid when TASK is Check
+
+
+const MY_PRINT_SIGNAL = "$jtc-auto-duo-js-output-hv9g8yvqunqcnuowybgobhuwr$jtc$";
+
+function print(str){
+  console.log(MY_PRINT_SIGNAL + str + MY_PRINT_SIGNAL);
+}
+
 function arrayBufferToBase64(buffer) {
   let binary = "";
   let bytes = new Uint8Array(buffer);
@@ -28,7 +40,6 @@ function base64ToArrayBuffer(base64) {
 }
 
 var di = {};
-console.log("auto_duo.js loaded");
 
 // 用于通过二维码获取密钥
 async function activateDevice(rawCode) {
@@ -63,14 +74,12 @@ async function activateDevice(rawCode) {
   // Initialize new HTTP request
   let request = new XMLHttpRequest();
   let error = false;
-  console.log(url);
   request.open('POST', url, true);
   request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
   // Put onload() in a Promise. It will be raced with a timeout promise
   let newData = new Promise((resolve, reject) => {
     request.onload = async function () {
       let result = JSON.parse(request.responseText);
-      console.log(result);
       // If successful
       if (result.stat == "OK") {
         // Get device info as JSON
@@ -84,11 +93,16 @@ async function activateDevice(rawCode) {
           "privateRaw": privateRaw
         };
         di = deviceInfo;
+        print("success");
+        // print(JSON.stringify(di));
+        print(btoa(JSON.stringify(deviceInfo)));
         resolve("Success");
       }
       else {
         // If we receive a result from Duo and the status is FAIL, the activation code is likely expired
         console.error(result);
+        print("error");
+        print(JSON.stringify(result));
         reject("Expired");
       }
     };
@@ -233,12 +247,17 @@ async function buildRequest(info, method, path, extraParam = {}, extraHeader = {
 
 
 async function main(){
-  // var qr_code = prompt("请输入二维码");
-  var qr_code = "dEfES2s5IXbHXd0mxaE1-YXBpLWQ5YzVhZmNmLmR1b3NlY3VyaXR5LmNvbQ";
-  await activateDevice(qr_code);
-  while (true) {
-    agree_push();
-    await new Promise(resolve => setTimeout(resolve, 1500));
+  if(TASK == "A"){
+    await activateDevice(QR_CODE);
+    return;
+  }
+  if(TASK == "C"){
+    info = atob(BASE64_DICT);
+    di = JSON.parse(info);
+    while (true) {
+      agree_push();
+      await new Promise(resolve => setTimeout(resolve, 1500));
+    }
   }
 }
 
