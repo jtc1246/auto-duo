@@ -4,9 +4,9 @@ const XMLHttpRequest = require("@aelfqueen/xmlhttprequest").XMLHttpRequest; // n
 // setRequestHeader does not work in that.
 
 
-const TASK = "C"; // [A]ctivate or [C]heck
-const QR_CODE = ""; // only valid when TASK is Activate
-const BASE64_DICT = ""; // only valid when TASK is Check
+const TASK = "$01$"; // [A]ctivate or [C]heck
+const QR_CODE = "$02$"; // only valid when TASK is Activate
+const BASE64_DICT = "$03$"; // only valid when TASK is Check
 
 
 const MY_PRINT_SIGNAL = "$jtc-auto-duo-js-output-hv9g8yvqunqcnuowybgobhuwr$jtc$";
