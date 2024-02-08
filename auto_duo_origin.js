@@ -1,8 +1,3 @@
-const crypto = require("crypto");
-const XMLHttpRequest = require("@aelfqueen/xmlhttprequest").XMLHttpRequest; // npm install @aelfqueen/xmlhttprequest
-// can't use xmlhttprequest directly, see https://github.com/driverdan/node-XMLHttpRequest/pull/169
-// setRequestHeader does not work in that.
-
 function arrayBufferToBase64(buffer) {
   let binary = "";
   let bytes = new Uint8Array(buffer);
@@ -10,7 +5,7 @@ function arrayBufferToBase64(buffer) {
   for (let i = 0; i < len; i++) {
     binary += String.fromCharCode(bytes[i]);
   }
-  return btoa(binary);
+  return window.btoa(binary);
 }
 
 function twoDigits(input) {
@@ -18,7 +13,7 @@ function twoDigits(input) {
 }
 
 function base64ToArrayBuffer(base64) {
-  var binary_string = atob(base64);
+  var binary_string = window.atob(base64);
   var len = binary_string.length;
   var bytes = new Uint8Array(len);
   for (var i = 0; i < len; i++) {
@@ -44,7 +39,7 @@ async function activateDevice(rawCode) {
 
   let url = 'https://' + host + '/push/v2/activation/' + identifier;
   // Create new pair of RSA keys
-  let keyPair = await crypto.subtle.generateKey({
+  let keyPair = await window.crypto.subtle.generateKey({
     name: "RSASSA-PKCS1-v1_5",
     modulusLength: 2048,
     publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
@@ -52,25 +47,24 @@ async function activateDevice(rawCode) {
   }, true, ["sign", "verify"]);
 
   // Convert public key to PEM format to send to Duo
-  let pemFormat = await crypto.subtle.exportKey("spki", keyPair.publicKey);
-  pemFormat = btoa(String.fromCharCode(...new Uint8Array(pemFormat))).match(/.{1,64}/g).join('\n');
+  let pemFormat = await window.crypto.subtle.exportKey("spki", keyPair.publicKey);
+  pemFormat = window.btoa(String.fromCharCode(...new Uint8Array(pemFormat))).match(/.{1,64}/g).join('\n');
   pemFormat = `-----BEGIN PUBLIC KEY-----\n${pemFormat}\n-----END PUBLIC KEY-----`;
 
   // Exporting keys returns an array buffer. Convert it to Base64 string for storing
-  let publicRaw = arrayBufferToBase64(await crypto.subtle.exportKey("spki", keyPair.publicKey));
-  let privateRaw = arrayBufferToBase64(await crypto.subtle.exportKey("pkcs8", keyPair.privateKey));
+  let publicRaw = arrayBufferToBase64(await window.crypto.subtle.exportKey("spki", keyPair.publicKey));
+  let privateRaw = arrayBufferToBase64(await window.crypto.subtle.exportKey("pkcs8", keyPair.privateKey));
 
   // Initialize new HTTP request
   let request = new XMLHttpRequest();
   let error = false;
-  console.log(url);
+  console.log(url)
   request.open('POST', url, true);
   request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
   // Put onload() in a Promise. It will be raced with a timeout promise
   let newData = new Promise((resolve, reject) => {
     request.onload = async function () {
       let result = JSON.parse(request.responseText);
-      console.log(result);
       // If successful
       if (result.stat == "OK") {
         // Get device info as JSON
@@ -83,6 +77,9 @@ async function activateDevice(rawCode) {
           "publicRaw": publicRaw,
           "privateRaw": privateRaw
         };
+        // Store device info in chrome sync
+        // 保存数据，之后要切换成其它方式输出
+        // await chrome.storage.sync.set({"deviceInfo": deviceInfo});
         di = deviceInfo;
         resolve("Success");
       }
@@ -111,19 +108,118 @@ async function activateDevice(rawCode) {
 
 // 点击 push 按钮之后自动同意的函数
 async function agree_push () {
+  // loading = true;
+  // Disable button while making Duo request
+  // pushButton.disabled = true;
+  // pushButton.innerText = "Working...";
+  // let root = "Checking for Duo logins";
+  // let dots = 0;
+  // splash.innerHTML = `${root}...`;
+  // Show loading ...
+  // let loadingInterval = setInterval(() => {
+  //   splash.innerText = `${root}${'.'.repeat(dots + 1)}`;
+  //   dots = (dots + 1) % 3;
+  // }, 300);
   try {
+    // Get device info from storage
+    // 这里 读取之前储存的数据，接下来要换成其它方式输入
+    // let info = await getDeviceInfo();
     let info = di;
     let transactions = (await buildRequest(info, "GET", "/push/v2/device/transactions")).response.transactions;
+    // If no transactions exist at the moment
     if(transactions.length == 0) {
+      // failedAttempts++;
+      // splash.innerHTML = "No logins found!";
     }
+    // Expected response: Only 1 transaction should exist
+    // Only auto-approve this transaction if one-click logins are enabled
     else if(transactions.length == 1 && !info.reviewPush) {
+      // Push the single transaction
+      // Throws an error if something goes wrong
       await approveTransaction(info, transactions[0].urgid);
+      // Switch to success screen
+      // successDetails.innerHTML = traverse(transactions[0].attributes);
+      // failedAttempts = 0;
+      // changeScreen("success");
+      // 应该到这里就结束了
     }
+    // There shouldn't be more than one transaction
+    // Present all to the user
     else {
+      // // If one-click logins are disabled
+      // if(transactions.length == 1) {
+      //   transactionsSplash.innerHTML = "Is this your login?";
+      // } else {
+      //   // If multiple login attempts exist
+      //   transactionsSplash.innerHTML = "There's " + transactions.length + " login attempts.<br>Which one are you?";
+      // }
+      // // Switch to transactions screen
+      // changeScreen("transactions");
+      // // Also reset the transactions page
+      // while(approveTable.firstChild) {
+      //   approveTable.removeChild(approveTable.lastChild);
+      // }
+      // // For each transaction
+      // for(let i = 0; i < transactions.length; i++) {
+      //   let row = document.createElement("tr");
+      //   // First column
+      //   let c1 = document.createElement("td");
+      //   let approve = document.createElement("button");
+      //   approve.innerHTML = "&#x2713;";
+      //   approve.className = "approve";
+      //   approve.onclick = async () => {
+      //     // Catch any possible errors
+      //     try {
+      //       // Display loading
+      //       approveTable.style.display = "none";
+      //       transactionsSplash.innerText = "Working...";
+      //       // Approve the transaction
+      //       // 应该可以直接跳到这里（但是其实这后面的都不需要，后面的都是在处理异常情况，正常情况早就处理好了）
+      //       await approveTransaction(info, transactions[i].urgid);
+      //       successDetails.innerHTML = traverse(transactions[i].attributes);
+      //       changeScreen("success");
+      //     } catch(e) {
+      //       console.error(e);
+      //       failedReason.innerText = `"${e}"`;
+      //       changeScreen("failure");
+      //     } finally {
+      //       // Reset elements
+      //       approveTable.style.display = "block";
+      //     }
+      //   }
+      //   c1.appendChild(approve);
+
+      //   // 2nd column
+      //   let c2 = document.createElement("td");
+      //   let p = document.createElement("p");
+      //   // I have no way of knowing if array sizes vary per organization, so pick and choose isn't an option
+      //   // The solution is to traverse through the JSON and find all key/value pairs
+      //   p.innerHTML = traverse(transactions[i].attributes);
+      //   p.style = "text-align: left; font-size: 12px; margin: 10px 0px";
+      //   c2.appendChild(p);
+
+      //   row.appendChild(c1);
+      //   row.appendChild(c2);
+      //   approveTable.appendChild(row);
+      // }
     }
   } catch(error) {
+    // failedReason.innerText = `"${error}"\n\nStack: ${error.stack}`;
+    // failedAttempts = 0;
     console.error(error);
+    // changeScreen("failure");
   } finally {
+    // clearInterval(loadingInterval);
+    // loading = false;
+    // // Re-enable button
+    // pushButton.disabled = false;
+    // pushButton.innerHTML = "Try Again";
+    // // If we couldn't login after many attemps
+    // if(failedAttempts >= 4) {
+    //   failedAttempts = 0;
+    //   // Remind the user how Duochrome works
+    //   changeScreen("failedAttempts");
+    // }
   }
 };
 
@@ -190,13 +286,13 @@ async function buildRequest(info, method, path, extraParam = {}, extraHeader = {
   }
 
   // Import keys (convert form Base64 back into ArrayBuffer)
-  let publicKey = await crypto.subtle.importKey("spki", base64ToArrayBuffer(info.publicRaw), {name: "RSASSA-PKCS1-v1_5", hash: {name: 'SHA-512'},}, true, ["verify"]);
-  let privateKey = await crypto.subtle.importKey("pkcs8", base64ToArrayBuffer(info.privateRaw), {name: "RSASSA-PKCS1-v1_5", hash: {name: "SHA-512"},}, true, ["sign"]);
+  let publicKey = await window.crypto.subtle.importKey("spki", base64ToArrayBuffer(info.publicRaw), {name: "RSASSA-PKCS1-v1_5", hash: {name: 'SHA-512'},}, true, ["verify"]);
+  let privateKey = await window.crypto.subtle.importKey("pkcs8", base64ToArrayBuffer(info.privateRaw), {name: "RSASSA-PKCS1-v1_5", hash: {name: "SHA-512"},}, true, ["sign"]);
 
   // Sign canonicalized request using RSA private key
   let toEncrypt = new TextEncoder().encode(canonRequest);
-  let signed = await crypto.subtle.sign({name: "RSASSA-PKCS1-v1_5"}, privateKey, toEncrypt);
-  let verified = await crypto.subtle.verify({name: "RSASSA-PKCS1-v1_5"}, publicKey, signed, toEncrypt);
+  let signed = await window.crypto.subtle.sign({name: "RSASSA-PKCS1-v1_5"}, privateKey, toEncrypt);
+  let verified = await window.crypto.subtle.verify({name: "RSASSA-PKCS1-v1_5"}, publicKey, signed, toEncrypt);
 
   // Ensure keys match
   if(!verified) {
@@ -205,7 +301,7 @@ async function buildRequest(info, method, path, extraParam = {}, extraHeader = {
 
   // Required headers for all requests
   let headers = {
-    "Authorization": "Basic " + btoa(info.pkey + ":" + arrayBufferToBase64(signed)),
+    "Authorization": "Basic " + window.btoa(info.pkey + ":" + arrayBufferToBase64(signed)),
     "x-duo-date": date
   }
 
@@ -233,8 +329,7 @@ async function buildRequest(info, method, path, extraParam = {}, extraHeader = {
 
 
 async function main(){
-  // var qr_code = prompt("请输入二维码");
-  var qr_code = "dEfES2s5IXbHXd0mxaE1-YXBpLWQ5YzVhZmNmLmR1b3NlY3VyaXR5LmNvbQ";
+  var qr_code = prompt("请输入二维码");
   await activateDevice(qr_code);
   while (true) {
     agree_push();
