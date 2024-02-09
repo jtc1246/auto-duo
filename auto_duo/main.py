@@ -6,10 +6,15 @@ from myBasics import strToBase64  # pip install myBasics
 from time import time, sleep
 
 try:
-    _ = subprocess.check_output('node -v', shell=True, stderr=DEVNULL)
+    nodejs_version = subprocess.check_output('node -v', shell=True, stderr=DEVNULL)
 except:
-    print("Please install nodejs and npm first.")
+    print("Please install nodejs and npm first. Recommend version 18.0.0.")
     os._exit(1)
+nodejs_version = nodejs_version.decode('utf-8')
+if (nodejs_version.find('v18') == -1):
+    print("Warning: I am not sure whether your nodejs version works.")
+    print("Recommends 18.0.0, see details on https://github.com/jtc1246/auto-duo")
+    print('If you always fail in submitting QR code later, you can try using this version.')
 
 try:
     _ = subprocess.check_output(js_test, shell=True, stderr=DEVNULL)
@@ -61,4 +66,3 @@ def agree_forever(base64_dict):
     while True:
         # 正常应该是不会出错的，但为了防止出现特殊情况，还是加上
         _ = run_js(js)
-
